@@ -4,6 +4,7 @@ description: Country Information App
 dependencies:
   flutter:
     sdk: flutter
+  url_launcher: ^6.0.0
   http: ^0.13.3
 
 environment:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 void main() => runApp(MyApp());
 
@@ -71,8 +72,28 @@ class _CountryInfoScreenState extends State<CountryInfoScreen> {
                 itemBuilder: (context, index) {
                   final university = _universities[index];
                   return ListTile(
-                    title: Text(university.name),
-                    subtitle: Text(university.country),
+                    title: GestureDetector(
+                      onTap: () {
+                        if (university.url.isNotEmpty) {
+                          _launchURL(university.url);
+                        }
+                      },
+                      child: Text(
+                        university.name,
+                        style: TextStyle(
+                          color: university.url.isNotEmpty ? Colors.blue : Colors.black,
+                          decoration: university.url.isNotEmpty ? TextDecoration.underline : TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Country: ${university.country}"),
+                        if (university.state.isNotEmpty) Text("State: ${university.state}"),
+                        if (university.city.isNotEmpty) Text("City: ${university.city}"),
+                      ],
+                    ),
                   );
                 },
               )
@@ -85,18 +106,32 @@ class _CountryInfoScreenState extends State<CountryInfoScreen> {
       ),
     );
   }
+
+  Future<void> _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw Exception('Could not launch URL');
+    }
+  }
 }
 
 class University {
   final String name;
   final String country;
+  final String state;
+  final String city;
+  final String url;
 
-  University({required this.name, required this.country});
+  University({required this.name, required this.country, this.state = '', this.city = '', this.url = ''});
 
   factory University.fromJson(Map<String, dynamic> json) {
     return University(
       name: json['name'] ?? '',
       country: json['country'] ?? '',
+      state: json['state'] ?? '',
+      city: json['city'] ?? '',
+      url: json['web_pages'] != null && json['web_pages'].isNotEmpty ? json['web_pages'][0] : '',
     );
   }
 }
